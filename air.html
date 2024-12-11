@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>空氣品質查詢</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        #searchBox {
+            margin-bottom: 20px;
+            padding: 8px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 500px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">API資料</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">股票資訊</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="air.html">空氣品質</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="weather.html">天氣資料</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <h1>空氣品質資訊</h1>
+    <input type="text" id="searchBox" placeholder="搜尋測站名稱或縣市..." oninput="filterData()">
+    
+    <table id="aqiTable">
+        <thead>
+            <tr>
+                <th>測站名稱</th>
+                <th>縣市</th>
+                <th>空氣品質指標</th>
+                <th>空氣污染指標物</th>
+                <th>狀態</th>
+                <th>資料發布時間</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 資料將會顯示在這裡 -->
+        </tbody>
+    </table>
+
+    <script>
+        const apiUrl = "https://data.moenv.gov.tw/api/v2/aqx_p_432?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=ImportDate desc&format=JSON";
+        let allRecords = [];
+
+        // 發送 API 請求
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                allRecords = data.records;
+                displayData(allRecords);
+            })
+            .catch(error => {
+                console.error("Error fetching data: ", error);
+            });
+
+        // 顯示資料到表格
+        function displayData(records) {
+            const tableBody = document.getElementById("aqiTable").getElementsByTagName("tbody")[0];
+            tableBody.innerHTML = ''; // 清空表格
+
+            records.forEach(record => {
+                const row = tableBody.insertRow();
+                const siteNameCell = row.insertCell(0);
+                const countyCell = row.insertCell(1);
+                const aqiCell = row.insertCell(2);
+                const pollutantCell = row.insertCell(3);
+                const statusCell = row.insertCell(4);
+                const publishTimeCell = row.insertCell(5);
+
+                siteNameCell.textContent = record.sitename || 'N/A';
+                countyCell.textContent = record.county || 'N/A';
+                aqiCell.textContent = record.aqi || 'N/A';
+                pollutantCell.textContent = record.pollutant || 'N/A';
+                statusCell.textContent = record.status || 'N/A';
+                publishTimeCell.textContent = record.publishtime || 'N/A';
+            });
+        }
+
+        // 搜尋過濾資料
+        function filterData() {
+            const query = document.getElementById("searchBox").value.toLowerCase();
+            const filteredRecords = allRecords.filter(record => {
+                const siteName = record.sitename ? record.sitename.toLowerCase() : '';
+                const county = record.county ? record.county.toLowerCase() : '';
+                return siteName.includes(query) || county.includes(query);
+            });
+            displayData(filteredRecords);
+        }
+    </script>
+</body>
+</html>
